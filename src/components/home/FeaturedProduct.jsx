@@ -2,8 +2,7 @@ import ProductCard from "../ProductCard";
 
 const FeaturedProduct = () => {
   return (
-    <div className="lg:flex items-center justify-between gap-4">
-      <ProductCard />
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-2  ">
       <ProductCard />
       <ProductCard />
       <ProductCard />

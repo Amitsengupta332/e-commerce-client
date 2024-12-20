@@ -1,7 +1,9 @@
+/* eslint-disable no-unused-vars */
 import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import { useForm } from "react-hook-form";
 import GoogleLogin from "../components/login-registration/GoogleLogin";
+import Swal from "sweetalert2";
 
 const Login = () => {
   const { Login } = useAuth();
@@ -11,11 +13,27 @@ const Login = () => {
     formState: { errors },
   } = useForm();
   const navigate = useNavigate();
-  const onSubmit = (data) => {
-    Login(data.email, data.password);
-    navigate("/");
-    // console.log(data);
+
+  const onSubmit = async (data) => {
+    try {
+      await Login(data.email, data.password);
+      Swal.fire({
+        position: "center",
+        icon: "success",
+        title: "Login Successful",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+      navigate("/");
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Login Failed",
+        text: "Invalid email or password. Please try again.",
+      });
+    }
   };
+
   return (
     <div className="hero bg-base-200 min-h-screen">
       <div className="hero-content flex-col lg:flex-row-reverse">
@@ -37,11 +55,11 @@ const Login = () => {
                 type="email"
                 placeholder="email"
                 className="input input-bordered"
-                {...register("email", { required: true })}
+                {...register("email", { required: "Email is required" })}
               />
               {errors.email && (
                 <p className="text-red-500 text-sm font-light">
-                  Email is Required
+                  {errors.email.message}
                 </p>
               )}
             </div>
@@ -54,18 +72,20 @@ const Login = () => {
                 placeholder="password"
                 className="input input-bordered"
                 {...register("password", {
-                  required: true,
-                  minLength: 6,
+                  required: "Password is required",
+                  validate: (value) => {
+                    const passwordValidation =
+                      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+                    return (
+                      passwordValidation.test(value) ||
+                      "Password must be at least 8 characters, include uppercase, lowercase, a number, and a special character."
+                    );
+                  },
                 })}
               />
-              {errors.password?.type === "required" && (
+              {errors.password && (
                 <p className="text-red-500 text-sm font-light">
-                  Password is Required
-                </p>
-              )}
-              {errors.password?.type === "minLength" && (
-                <p className="text-red-500 text-sm font-light">
-                  Password must have at least 6 character
+                  {errors.password.message}
                 </p>
               )}
             </div>
@@ -76,9 +96,9 @@ const Login = () => {
             </div>
             <GoogleLogin />
             <p className="my-4 text-sm font-light">
-              Already Have an Account{" "}
+              Don&apost have an account?{" "}
               <Link to="/register" className="text-primary">
-                register
+                Register
               </Link>
             </p>
           </form>

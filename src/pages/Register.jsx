@@ -27,25 +27,42 @@ const Register = () => {
       status,
       wishList,
     };
-    CreateUser(data.email, data.password).then(() => {
-      axios.post("http://localhost:4000/users", userData).then((res) => {
-        if (res.data.insertedId) {
-          Swal.fire({
-            position: "center",
-            icon: "success",
-            title: "Registration Successful",
-            showConfirmButton: false,
-            timer: 1500,
-          });
-          navigate("/");
-        }
+    console.log(userData);
 
-        console.log(res);
+    // Password validation regex
+    const passwordValidation =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordValidation.test(data.password)) {
+      Swal.fire({
+        icon: "error",
+        title: "Invalid Password",
+        text: "Password must be at least 8 characters long, include uppercase and lowercase letters, at least one number, and one special character.",
       });
-    });
+      return;
+    }
 
-    // navigate("/");
-    // console.log(userData);
+    CreateUser(data.email, data.password)
+      .then(() => {
+        axios.post("http://localhost:4000/users", userData).then((res) => {
+          if (res.data.insertedId) {
+            Swal.fire({
+              position: "center",
+              icon: "success",
+              title: "Registration Successful",
+              showConfirmButton: false,
+              timer: 1500,
+            });
+            navigate("/");
+          }
+        });
+      })
+      .catch((err) => {
+        Swal.fire({
+          icon: "error",
+          title: "Registration Failed",
+          text: err.message,
+        });
+      });
   };
 
   return (
@@ -73,7 +90,7 @@ const Register = () => {
               />
               {errors.email && (
                 <p className="text-red-500 text-sm font-light">
-                  Email is Required
+                  Email is required
                 </p>
               )}
             </div>
@@ -87,17 +104,19 @@ const Register = () => {
                 className="input input-bordered"
                 {...register("password", {
                   required: true,
-                  minLength: 6,
+                  validate: (value) => {
+                    const passwordValidation =
+                      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+                    return (
+                      passwordValidation.test(value) ||
+                      "Password must be at least 8 characters long, include uppercase and lowercase letters, at least one number, and one special character."
+                    );
+                  },
                 })}
               />
-              {errors.password?.type === "required" && (
+              {errors.password && (
                 <p className="text-red-500 text-sm font-light">
-                  Password is Required
-                </p>
-              )}
-              {errors.password?.type === "minLength" && (
-                <p className="text-red-500 text-sm font-light">
-                  Password must have at least 6 character
+                  {errors.password.message || "Password is required"}
                 </p>
               )}
             </div>
@@ -107,20 +126,21 @@ const Register = () => {
               </label>
               <input
                 type="password"
-                placeholder="password"
+                placeholder="confirm password"
                 className="input input-bordered"
                 {...register("confirmPassword", {
                   required: true,
                   validate: (value) => {
-                    if (watch("password") != value) {
-                      return "Your Password do not match";
+                    if (watch("password") !== value) {
+                      return "Passwords do not match";
                     }
                   },
                 })}
               />
               {errors.confirmPassword && (
                 <p className="text-red-500 text-sm font-light">
-                  Both Password must match
+                  {errors.confirmPassword.message ||
+                    "Confirm password is required"}
                 </p>
               )}
             </div>
@@ -137,19 +157,18 @@ const Register = () => {
               </select>
               {errors.role && (
                 <p className="text-red-500 text-sm font-light">
-                  You must select a role
+                  Role selection is required
                 </p>
               )}
             </div>
             <div className="form-control mt-6">
-              {/* <button className="btn btn-primary">Register</button> */}
               <button type="submit" className="btn btn-primary">
                 Register
               </button>
             </div>
             <GoogleLogin />
             <p className="my-4 text-sm font-light">
-              Already Have an Account{" "}
+              Already have an account?{" "}
               <Link to="/login" className="text-primary">
                 Login
               </Link>
